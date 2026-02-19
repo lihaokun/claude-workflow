@@ -18,7 +18,7 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/<你的用户名>/claude-workflow.git
+git clone https://github.com/lihaokun/claude-workflow.git
 ```
 
 ### 2. 部署模板文件
