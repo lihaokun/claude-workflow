@@ -182,6 +182,124 @@ Rely-Guarantee 条件：（如适用）
 
 ---
 
+### 4.5 契约对照审核 v2（强制流程）
+
+**动机**：传统 §4.2 五维度自审核存在两类系统性盲点：
+(a) 同一审核者（写代码的人）回头审自己代码时 confirmation bias 不可消除；
+(b) expectations 事后从代码回填，被实现现状污染——代码里若有字段名 typo 或行为偏离契约，就会被当作"应该如此"记入 expectations。
+
+本节定义结构化、双验证、含独立审核者的 v2 流程，作为新增子计划的强制规范，**取代**单纯依赖 §4.2 的自审核。
+
+#### 4.5.1 适用范围
+
+**适用 v2 流程**:
+- 任何**新增子计划**（带契约文档的实施任务）
+
+**不适用 v2 流程（仍按 §4.2 五维度自审核即可）**:
+- Bug fix（包括跨多文件的）
+- Refactor 不改契约语义
+- 文档 / 注释 / 测试修改
+- 第三方库升级 / 工程基建（如 Makefile / CI 配置）
+- 现有子计划的小修小补（< 50 行 diff 的局部改动）
+
+**判定原则**: 是否引入或修改对实施结果有外部约束的契约（schema 字段 / 枚举 / 流程 / 不变量 / 跨实现一致性等）。如果引入新契约 → v2；只改实现细节 → §4.2。
+
+**契约文档定义**: design / impl-plan / data format spec / API 等对实施结果有外部约束的文档。典型路径：
+- `docs/research/<feature>-design.md`
+- `docs/research/<feature>-implementation-plan.md`
+- `docs/design/<feature>/architecture.md`
+- `src/<module>/<DATA_FORMAT_SPEC>.md`
+- `src/<module>/README.md`
+
+**约束对象声明**: 本节"硬约束"**仅 AI coding agent 必须遵守**。人类开发者**可选**用 v2 流程，但不强制；本流程**不阻断**人工 commit / push（无 CI hook）。协作者看到 `docs/audits/<subplan-id>/` 目录是 v2 审核产物，不影响日常开发。详见 `templates/contract-audit/README.md` Q6。
+
+#### 4.5.2 Step 0 规划阶段（必产出）
+
+进入 Step 1 实施前**必须**产出以下交付物：
+
+1. **`docs/audits/<subplan-id>/expectations.md`**：从契约文档独立抽出的 10 节 expectations checklist（结构见 §4.5.3）。**必须先读契约不读现有代码**，避免 expectations 被代码现状污染。
+
+2. **机械化部分识别**：
+   - JSON 输出 → 写 `*.schema.json`（JSON Schema 校验）
+   - 跨实现共享枚举 → 抽到 module-level 常量供其它实现 import（避免重复定义）
+   - 流程步骤 → 约定 `# Step Pn:` 注释规范（grep 工具校验全步骤都在）
+
+3. **Property-based invariants 列表**：写到 expectations.md 的 §7 节，用 property-based testing 框架（如 Python `hypothesis`、Haskell `QuickCheck`、Rust `proptest`、Java `jqwik`、JavaScript `fast-check`）覆盖。例：`sum(parts) == total` 这类对任意输入恒成立的恒等式。
+
+**未产出 expectations.md 不得开始 Step 1。**
+
+#### 4.5.3 Expectations Checklist 10 节模板
+
+详细模板见 `templates/contract-audit/expectations-template.md`。结构：
+
+```
+# Contract Audit Expectations — <subplan-id>
+
+## 1. 契约源（multi-doc）          列出所有相关 §
+## 2. Schema 字段（机械化）         字段名/类型/来源/实现位置/一致性
+## 3. 枚举值（机械化）              来源枚举集合/共享常量名/import 路径
+## 4. 流程步骤（机械化）            P1 P2 ... 与 # Step Pn 注释对照
+## 5. 行为契约（语义，人审）         例: rc != 0 不算 error
+## 6. 时序/状态契约（人审）          例: 冻结语义、init 顺序
+## 7. 不变量契约（property-based）   不变量测试覆盖
+## 8. 性能契约（机械化）             单元测试时长断言
+## 9. 安全/副作用契约                例: stdout 零泄漏 / 核心模块零修改
+## 10. 跨实现一致性                  例: 关键算法跨语言参考向量 bit-exact
+```
+
+#### 4.5.4 Step 1-3 实施约束
+
+代码实施时遵守 Step 0 抽出的机械化约束：
+
+- **引用共享常量**：禁止重新定义 enum / schema 字段名，必须 import Step 0 抽出的常量
+- **Step 注释**：流程步骤代码处加 `# Step Pn: <简述>` 注释（与 expectations §4 对照）
+- **测试组织**：分层组织（基本/边缘/property-based），property-based invariants 用同名框架（项目自选）覆盖
+
+#### 4.5.5 Step 5 验证（双验证）
+
+Step 5 自我审核**必须**走两条独立路径：
+
+##### 路径 A：自动检查（机械化）
+
+具体检查脚本由项目自备（典型放在 `scripts/contract_audit/`），应覆盖：
+- **JSON Schema 校验**：输出文件符合声明的 schema
+- **流程注释 grep**：`# Step Pn:` 注释覆盖设计文档列出的所有步骤
+- **共享枚举 import 检查**：跨实现复用同一常量定义，不重复定义
+- **副作用 git diff 检查**：声明「零修改」的核心模块未被改动
+- **性能断言**：单元测试中加 `assert elapsed < T_max`
+
+##### 路径 B：Subagent 独立审（消除 bias）
+
+按 `templates/contract-audit/subagent-prompt-template.md` 启动 subagent：
+- 给 subagent 契约文档 + git diff，**不给完整代码**
+- 给 subagent expectations.md 的"列字段"但**不给"实现位置"列**（避免 echo bias）
+- subagent 独立列契约 expectations 并对比 diff
+- 产出 `docs/audits/<subplan-id>/audit-report.md`，标注 ✅/⚠️/❌ + 不一致点行号
+
+主 agent 收到 subagent report 后：
+- 修复 ❌ 项
+- 决策 ⚠️ 项（修 / 文档化 / 接受偏离）
+- 把决策记录到 `docs/audits/<subplan-id>/decisions.md`
+
+#### 4.5.6 退出准则（每个子计划）
+
+- ✅ `docs/audits/<subplan-id>/expectations.md` 全部 10 节填完
+- ✅ 路径 A 自动检查全过
+- ✅ `docs/audits/<subplan-id>/audit-report.md` 0 个 critical / unresolved 项
+- ✅ §4.2 五维度审核（一致性/风格/正确性/性能/可维护性）通过
+
+#### 4.5.7 与 §4.2 的关系
+
+§4.2 五维度审核**仍然保留**，作为人工 sanity 兜底。但它不再是唯一审核手段——v2 流程的核心是**自动检查 + 独立审核**，§4.2 只填补"机械化和独立审核都覆盖不到的语义直觉"。
+
+#### 4.5.8 工具与模板位置
+
+- 流程模板: `templates/contract-audit/`（本仓库提供）
+- 自动检查工具: `scripts/contract_audit/`（由下游项目自备，§4.5.5 路径 A 列出应覆盖的检查项）
+- 子计划 audit 产出: `docs/audits/<subplan-id>/`（含 expectations.md + audit-report.md + decisions.md）
+
+---
+
 ## 5. 修复与迭代流程
 
 当发现 bug 或需要补充功能时：
@@ -247,7 +365,18 @@ docs/
 │   └── <模块名>-fix-<简述>.md
 ├── test-reports/      # 测试报告与 bug 记录
 │   └── <功能名>-test-report.md
+├── audits/            # 契约对照审核 (§4.5 v2)
+│   └── <subplan-id>/
+│       ├── expectations.md   # Step 0 抽出的契约 expectations
+│       ├── audit-report.md   # Step 5 subagent 独立审报告
+│       └── decisions.md      # ⚠️ 项的处置记录
 └── workflow.md        # 本文档
+
+templates/
+└── contract-audit/    # §4.5 模板
+    ├── README.md
+    ├── expectations-template.md
+    └── subagent-prompt-template.md
 ```
 
 ### 6.2 文档版本控制
@@ -269,6 +398,20 @@ docs/
 ```
 新功能开发：
   调研 → [确认] → 架构 → [确认] → 细化 → [确认] → 审查 → 逐模块实现+测试+审核
+
+新增子计划（带契约文档）—— §4.5 v2 强制流程：
+  Step 0 (规划)
+    抽契约 expectations (10 节, docs/audits/<id>/expectations.md)
+    识别机械化部分 (JSON Schema / 共享 enum / # Step Pn 注释)
+    列 property-based invariants
+  Step 1-3 (实施)
+    引用共享常量 (不重新定义)
+    加 # Step Pn 注释
+    property-based 测试覆盖 invariants
+  Step 5 (双验证)
+    A. <项目自备> contract_audit run_all <id>   ← 自动机械化检查
+    B. subagent 独立审 (按 templates/contract-audit/subagent-prompt-template.md)
+    主 agent 修 ❌ + 决策 ⚠️ → docs/audits/<id>/decisions.md
 
 Bug 修复：
   局部错误     → 直接修复 + 补测试 + 回归
