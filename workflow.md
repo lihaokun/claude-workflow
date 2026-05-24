@@ -498,7 +498,7 @@ docs/
 │       ├── architecture.md
 │       ├── detailed-design.md
 │       └── subplans/             # 每次有契约变更的子计划 (§6.4.3)
-│           └── <subplan-id>-<简述>.md
+│           └── <subplan-id>.md
 ├── fixes/             # 修正方案文档
 │   └── <模块名>-fix-<简述>.md
 ├── test-reports/      # 测试报告与 bug 记录
@@ -540,7 +540,7 @@ templates/
 | 概念 | 定义 | 文档载体 |
 |------|------|---------|
 | **feature** | user-facing 能力或模块边界，长期稳定的命名单元 | `docs/research/<feature>-research.md`、`docs/design/<feature>/architecture.md` |
-| **subplan（子计划）** | feature 内一次有契约变更（新增 / 改动 schema / 枚举 / 流程 / 不变量等）的实施单元；下文中文用"子计划"、路径用 `subplan-id` | `docs/design/<feature>/subplans/<subplan-id>-<简述>.md`、`docs/audits/<subplan-id>/`（§4.5 v2 产出） |
+| **subplan（子计划）** | feature 内一次有契约变更（新增 / 改动 schema / 枚举 / 流程 / 不变量等）的实施单元；下文中文用"子计划"、路径用 `subplan-id` | `docs/design/<feature>/subplans/<subplan-id>.md`、`docs/audits/<subplan-id>/`（§4.5 v2 产出） |
 | *(可选)* **product** | 跨 feature 共享、不归属任何单个 feature 的契约或总体架构 | `docs/product/architecture.md`、`docs/product/<shared-contract>.md` |
 
 **可选裁剪条件（litmus test）**：项目里是否有一类契约**不属于任何单个 feature，但被多个 feature 依赖**？
@@ -564,7 +564,8 @@ templates/
    - 走完 §2 设计三阶段，产出 `docs/research/<feature>-research.md` + `docs/design/<feature>/architecture.md`
    - feature 名一旦定下来不应轻易改名（涉及目录重命名）
 2. **否则，引入或修改契约（schema / 枚举 / 流程 / 不变量 / 跨实现一致性等）？** → **在已有 feature 内开新子计划**
-   - 分配 subplan-id（feature 内局部命名空间，如 `A-1`、`A-2-sparse-support`，无须带 feature 前缀——feature 由所在目录路径自然给出），创建 `docs/design/<feature>/subplans/<subplan-id>-<简述>.md`
+   - 分配 **subplan-id**（**全局唯一**的描述性字符串，建议格式 `<feature-short>-<index>-<desc>`，如 `polyfac-A-2-sparse-support`、`auth-B-1-jwt-rotation`）。subplan-id 本身即完整描述，**不另加 `<简述>` 后缀**；`docs/audits/` 是 flat 全局目录，需靠 id 自身保证不撞名
+   - 创建 `docs/design/<feature>/subplans/<subplan-id>.md`
    - 进入 §4.5 v2 流程：先产 `docs/audits/<subplan-id>/expectations.md` 再实施
 3. **否则（纯实现细节、性能优化）** → **不开新文档**
    - 按 §4.1 实施 + §4.2 五维度审核即可，无须 §4.5 v2
@@ -583,13 +584,13 @@ templates/
 文档目录结构（详见 §6.1）按以下规则填充：
 
 - `docs/product/`：仅在 6.4.1 litmus test 触发后存在
-- `docs/research/<feature>-research.md`：每个 feature 一份，扩充时 append 新节并标注"由子计划 `<id>` 引入"
-- `docs/design/<feature>/architecture.md`：feature 主架构，相对稳定；子计划引入的局部变更优先写入 `subplans/<id>-<简述>.md`。**满足以下任一条件**才回写主 architecture.md：
+- `docs/research/<feature>-research.md`：每个 feature 一份，扩充时 append 新节并标注"由子计划 `<subplan-id>` 引入"
+- `docs/design/<feature>/architecture.md`：feature 主架构，相对稳定；子计划引入的局部变更优先写入 `subplans/<subplan-id>.md`。**满足以下任一条件**才回写主 architecture.md：
   - 改动 feature 对外公开接口的签名 / 字段 / 错误码
   - 改动 feature 的模块划分（新增 / 合并 / 删除模块）
   - 引入跨子计划共享的数据结构 / 不变量
-- `docs/design/<feature>/subplans/<id>-<简述>.md`：子计划内的设计变更
-- `docs/audits/<subplan-id>/`：§4.5 v2 产出（expectations / audit-report / decisions），与 `docs/design/<feature>/subplans/<id>...md` 一一对应
+- `docs/design/<feature>/subplans/<subplan-id>.md`：子计划内的设计变更
+- `docs/audits/<subplan-id>/`：§4.5 v2 产出（expectations / audit-report / decisions），与 `docs/design/<feature>/subplans/<subplan-id>.md` 一一对应（subplan-id 全局唯一，故两处可同名）
 - `docs/fixes/<模块名>-fix-<简述>.md`：§5.1 修正方案，每次非显而易见的 bug fix 一份
 
 #### 6.4.4 示例
@@ -598,16 +599,16 @@ templates/
 
 数学库已有 feature `polynomial-factorization`（只支持稠密多项式）。现在要加稀疏多项式支持——引入新的 schema 字段 `representation: "dense" | "sparse"` 和新流程步骤。
 
-判定：步骤 2 命中（引入新契约 / 改动现有契约）→ 开新子计划：
+判定：步骤 2 命中（引入新契约 / 改动现有契约）→ 开新子计划，分配 subplan-id `polyfac-A-2-sparse-support`（feature 前缀 `polyfac` 保证全局唯一）：
 ```
 docs/design/polynomial-factorization/
-  architecture.md                                    ← 主架构 append 一节"稀疏扩展概述 (子计划 A-2)"
-  subplans/A-2-sparse-support.md                     ← 子计划详细设计变更
-docs/audits/A-2-sparse-support/
+  architecture.md                                              ← 主架构 append 一节"稀疏扩展概述 (子计划 polyfac-A-2)"
+  subplans/polyfac-A-2-sparse-support.md                       ← 子计划详细设计变更
+docs/audits/polyfac-A-2-sparse-support/
   expectations.md
   audit-report.md
   decisions.md
-docs/research/polynomial-factorization-research.md   ← append 调研稀疏多项式算法的章节，标 "由子计划 A-2 引入"
+docs/research/polynomial-factorization-research.md             ← append 调研稀疏多项式算法的章节，标 "由子计划 polyfac-A-2 引入"
 ```
 
 **示例 2：触发 product 层启用**
@@ -637,7 +638,7 @@ docs/design/billing/architecture.md                  ← 引用同一份 docs/pr
 
 新增子计划（带契约文档）—— §4.5 v2 强制流程：
   Step 0 (规划)
-    抽契约 expectations (10 节, docs/audits/<id>/expectations.md)
+    抽契约 expectations (10 节, docs/audits/<subplan-id>/expectations.md)
     识别机械化部分 (JSON Schema / 共享 enum / # Step Pn 注释)
     列 property-based invariants
   Step 1-3 (实施)
@@ -645,9 +646,9 @@ docs/design/billing/architecture.md                  ← 引用同一份 docs/pr
     加 # Step Pn 注释
     property-based 测试覆盖 invariants
   Step 5 (双验证)
-    A. <项目自备> contract_audit run_all <id>   ← 自动机械化检查
+    A. <项目自备> contract_audit run_all <subplan-id>   ← 自动机械化检查
     B. subagent 独立审 (按 templates/contract-audit/subagent-prompt-template.md)
-    主 agent 修 ❌ + 决策 ⚠️ → docs/audits/<id>/decisions.md
+    主 agent 修 ❌ + 决策 ⚠️ → docs/audits/<subplan-id>/decisions.md
 
 Bug 修复：
   发现错误     → 定位错误 → 构建根因分析文档 (§5.1) → [确认] → fix 分类
