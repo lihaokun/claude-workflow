@@ -68,9 +68,11 @@
 
   **未声明的假设 = 未来的 bug 源**
 
+**多模块项目必填**：
+- **模块级 invariant 列表 + preservation 论证**：跨模块共享的不变量及各模块如何共同维护（与 §3.3 并发规约的 Rely-Guarantee 配套——前者列清单，后者分配责任）
+
 **可选追加（算法 / 形式化验证类项目）**：
 - **Main Theorem → Lemma 形式分解**：把主目标定理化，分解为子 lemma，每个 lemma 对应一个或一组模块的 proof obligation
-- **模块级 invariant 列表 + preservation 论证**：跨模块共享的不变量及各模块如何共同维护
 
 **示例骨架**（G1/G2 编号取自调研报告"目标清单"或架构文档自定义）：
 
@@ -157,7 +159,7 @@ goal → 模块映射：
 
 ```
 函数：add(a: int, b: int) -> int
-前置：a, b ∈ int 范围（语言保证，无需额外 check）
+前置：a + b 在目标语言 int 范围内（不溢出由调用方保证）
 后置：返回 a + b
 正确性论证：trivial（单 op 算术，无分支 / 循环 / 副作用）
 ```
@@ -177,17 +179,17 @@ goal → 模块映射：
   - 前置: rows 非空、schema 匹配（pre 保证）
   - 论证：
     - 步骤 1: 批量校验 schema → 失败则 raise SchemaError（违反 pre，调用方责任）；通过则进入 步骤 2
-    - 步骤 2: 开启 transaction（依赖 H1：隔离级别 ≥ READ_COMMITTED 保证逐行可见性）
-    - 步骤 3: 循环逐行 INSERT，单行失败时累加到 failed，成功累加到 succeeded
+    - 步骤 2: 开启 transaction（依赖 H1：隔离级别 ≥ READ_COMMITTED 保证逐行可见性）；每行 INSERT 前打 savepoint
+    - 步骤 3: 循环逐行 INSERT，单行失败时 rollback 到 savepoint + 累加到 failed + 调用 `log.write(err)` 记录失败（依赖 H2：log.write 失败不影响主流程，不上传到 caller）；成功累加到 succeeded
       - 不变量：i 表示已尝试行数；succeeded ∪ failed == rows[:i]
       - 终止：i 单调递增，上界 len(rows) 有限
     - 步骤 4: 终态决策——
-      - 若循环中遇 CriticalDBError（如连接断开）→ rollback → 进入终态 (c)
-      - 若 failed 为空 → commit → 进入终态 (a)
-      - 否则（部分失败）→ commit succeeded 子集 → 进入终态 (b)
-    - 注：commit / rollback 的语义来自 db 模块 tx.commit 与 tx.rollback 的功能规约 ensures
+      - 若循环中遇 CriticalDBError（如连接断开）→ tx.rollback → 进入终态 (c)
+      - 若 failed 为空 → tx.commit → 进入终态 (a)
+      - 否则（部分失败）→ tx.commit（只有 savepoint 提交成功的行落盘，失败行已 rollback 到 savepoint）→ 进入终态 (b)
+    - 注：commit / rollback / savepoint 的语义来自 db 模块 tx.commit / tx.rollback / tx.savepoint 的功能规约 ensures
   - 后置: 三种终态恰对应 post 的三个分支
-  - 副作用论证: 仅 table 行变更受本函数控制；callee log.write 若被调用，由 H2 保证不影响主流程；无其它共享状态写入
+  - 副作用论证: (1) table 行变更：只有 succeeded 中的行最终落盘（步骤 3 savepoint + 步骤 4 commit 联合保证）；(2) log.write 调用：每个失败行触发一次，由 H2 隔离不影响主流程；(3) 无其它共享状态写入
 ```
 
 > proof-drafter cross-link：算法 / 形式化验证类项目可在本节"论证段"基础上引入 Hoare-logic SP Reasoning（逐 AST 语句 state 变换 + carry-forward verbatim 列法）。参见 `proof-drafter docs/design/architecture.md §3.2.3 (i) §2`。
@@ -196,7 +198,7 @@ goal → 模块映射：
 
 ### 2.4 设计文档审查
 
-**适用范围**：本节针对走完 §2 设计阶段的新功能 / 新子计划（§6.4 判定为"新建 feature"或"新子计划"路径）。bug fix 走 §5，纯实现细节 / 重构不改契约的情况按 §4.2 五维度审核，不进本审查。
+**适用范围**：本审查仅适用于 §6.4.2 主流程步骤 1-2 触发的情况（新建 feature 或新建子计划）。bug fix 走 §5，§6.4.2 步骤 3 走 §4.2 五维度审核，均不进本审查。
 
 设计完成后，进入实现前必须通过以下**可判定**审查：
 
@@ -331,7 +333,7 @@ Rely-Guarantee 条件：（如适用）
 
 **使用时机**：在架构阶段识别并发边界，在细化阶段为每个涉及共享状态的函数补充并发规约。
 
-> **与 §2.2.1 架构正确性论证的关系**：跨模块 / 跨线程不变量在 §2.2.1 "模块级 invariant 列表"（可选追加段）列出（不在"关键假设"段——那里是外部输入前提，不是模块共享状态）；本节 Rely-Guarantee 是该不变量在并发场景下的具体责任分配。架构论证负责"为什么这些不变量足够"，本节负责"每个线程承担哪部分"。多模块项目即使非算法类，建议把"模块级 invariant 列表"从 §2.2.1 可选段升为必填。
+> **与 §2.2.1 架构正确性论证的关系**：跨模块 / 跨线程不变量在 §2.2.1 "模块级 invariant 列表" 段列出（多模块项目必填，不在"关键假设"段——那里是外部输入前提，不是模块共享状态）。本节 Rely-Guarantee 是该不变量在并发场景下的具体责任分配——架构论证负责"为什么这些不变量足够"，本节负责"每个线程承担哪部分"。
 
 ### 3.4 分布式术语表
 
