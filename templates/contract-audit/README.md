@@ -26,10 +26,14 @@ templates/contract-audit/
 └── subagent-prompt-template.md       # Step 5 用：启动 subagent 独立审的 prompt 模板
 ```
 
-配套（由下游项目自备）：
+**配套——项目自备**（每个下游项目自行实现，不在本仓库提供）：
 ```
-scripts/contract_audit/                # 自动检查工具（机械化部分，workflow.md §4.5.5 列出应覆盖的检查项）
-docs/audits/<subplan-id>/              # 每子计划产出
+scripts/contract_audit/                # 自动检查工具（机械化部分，workflow.md §4.5.5 列出应覆盖的检查项；脚本名 / 入口 / 语言项目自选）
+```
+
+**配套——运行时产出**（流程执行过程中自动生成，每子计划一份）：
+```
+docs/audits/<subplan-id>/
   ├── expectations.md                  # Step 0 复制 expectations-template 填写
   ├── audit-report.md                  # Step 5 路径 B subagent 产出
   └── decisions.md                     # ⚠️ 项的处置记录
@@ -65,7 +69,7 @@ cp templates/contract-audit/expectations-template.md docs/audits/<subplan-id>/ex
 ### Step 5 路径 A — 自动检查（机械化）
 
 ```bash
-# 具体脚本由项目自备，典型 invocation:
+# 具体脚本由项目自备，脚本名 / 入口 / 语言项目自选。本文档示例用 run_all.py，仅作占位：
 python scripts/contract_audit/run_all.py <subplan-id>
 ```
 
@@ -144,10 +148,11 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 
 **Q6: 我是协作者（不是主开发者），需要遵守 v2 流程吗？**
 
-**不强制**。v2 流程的硬约束仅针对 AI agent。
+不强制。v2 硬约束**仅针对 AI coding agent**，权威定义见 `workflow.md §4.5.1 约束对象声明`。
 
-- 你看到 `docs/audits/<subplan-id>/` 目录 = v2 审核产物（expectations / audit-report / decisions），与日常开发无关
-- 你的 PR **不需要**填 expectations.md，除非你**也在做新增子计划**
+简短版：
+- 你看到 `docs/audits/<subplan-id>/` 目录 = v2 审核产物，与日常开发无关
+- 你的 PR 不需要填 expectations.md，除非你**也在做新增子计划**
 - bug fix / refactor / 文档 / 测试 / 基建 = 仍按 §4.2 五维度自审核
 
 **何时建议你也用 v2**:

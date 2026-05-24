@@ -22,12 +22,15 @@
 - **禁止**一次性提交跨多个模块的大规模变更
 - **禁止**在设计阶段未确认时擅自推进到实现阶段
 - **禁止**删除或注释掉失败的测试用例
+- **禁止**修复完成而不同步契约文档（"涉及契约变更"的判定与同步清单见 §5.1 第五部分）
 
 ---
 
 ## 2. 设计阶段流程
 
 新增核心功能时，按以下三个阶段推进设计。每个阶段产出设计文档，经用户确认后再进入下一阶段。
+
+> 关于"什么算新核心功能 / 何时该开新 feature vs 在已有 feature 内扩充 / 子计划如何划分"的判定，见 §6.4 文档划分原则。
 
 ### 2.1 调研阶段
 
@@ -276,16 +279,18 @@ Rely-Guarantee 条件：（如适用）
 
 ### 4.5 契约对照审核 v2（强制流程）
 
-**动机**：传统 §4.2 五维度自审核存在两类系统性盲点：
+**命名说明**：本节相对 §4.2 五维度自审核（即 "v1"）称为 v2。v1 / v2 分工见 §4.5.7。
+
+**动机**：传统 §4.2 五维度自审核（v1）存在两类系统性盲点：
 (a) 同一审核者（写代码的人）回头审自己代码时 confirmation bias 不可消除；
 (b) expectations 事后从代码回填，被实现现状污染——代码里若有字段名 typo 或行为偏离契约，就会被当作"应该如此"记入 expectations。
 
-本节定义结构化、双验证、含独立审核者的 v2 流程，作为新增子计划的强制规范，**取代**单纯依赖 §4.2 的自审核。
+本节定义结构化、双验证、含独立审核者的 v2 流程，作为新增子计划的强制规范。
 
 #### 4.5.1 适用范围
 
 **适用 v2 流程**:
-- 任何**新增子计划**（带契约文档的实施任务）
+- 任何**新增子计划**（带契约文档的实施任务）。"子计划"的概念定义、边界判定、subplan-id 命名约定见 §6.4 文档划分原则
 
 **不适用 v2 流程（仍按 §4.2 五维度自审核即可）**:
 - Bug fix（包括跨多文件的）
@@ -306,6 +311,12 @@ Rely-Guarantee 条件：（如适用）
 **约束对象声明**: 本节"硬约束"**仅 AI coding agent 必须遵守**。人类开发者**可选**用 v2 流程，但不强制；本流程**不阻断**人工 commit / push（无 CI hook）。协作者看到 `docs/audits/<subplan-id>/` 目录是 v2 审核产物，不影响日常开发。详见 `templates/contract-audit/README.md` Q6。
 
 #### 4.5.2 Step 0 规划阶段（必产出）
+
+**Step 编号说明**：本节用 "Step N" 标签呼应实施阶段的时间节点。映射到本文档已有章节如下：
+- **Step 0** ≡ §2 设计三阶段结束、§4.1 逐模块推进开始之前的产出
+- **Step 1-3** ≡ §4.1 + §4.3 实施 + 测试
+- **Step 5** ≡ §4.5.5（即本节"双验证"，含 §4.2 五维度兜底）
+- Step 4 不使用（留作未来扩展，避免与 §4.X 编号混淆）
 
 进入 Step 1 实施前**必须**产出以下交付物：
 
@@ -353,7 +364,7 @@ Step 5 自我审核**必须**走两条独立路径：
 
 ##### 路径 A：自动检查（机械化）
 
-具体检查脚本由项目自备（典型放在 `scripts/contract_audit/`），应覆盖：
+具体检查脚本由项目自备：**脚本名、入口、实现语言项目自选**（典型放在 `scripts/contract_audit/`，但本节只规定应覆盖的检查项，不规定文件名）。应覆盖：
 - **JSON Schema 校验**：输出文件符合声明的 schema
 - **流程注释 grep**：`# Step Pn:` 注释覆盖设计文档列出的所有步骤
 - **共享枚举 import 检查**：跨实现复用同一常量定义，不重复定义
@@ -373,16 +384,24 @@ Step 5 自我审核**必须**走两条独立路径：
 - 决策 ⚠️ 项（修 / 文档化 / 接受偏离）
 - 把决策记录到 `docs/audits/<subplan-id>/decisions.md`
 
+**执行时序**：路径 A 与路径 B 可并行启动；§4.2 五维度兜底在两条路径结果汇总后做最终一致性判断。
+
 #### 4.5.6 退出准则（每个子计划）
 
 - ✅ `docs/audits/<subplan-id>/expectations.md` 全部 10 节填完
-- ✅ 路径 A 自动检查全过
+- ✅ 路径 A 自动检查全过（**若项目尚未自备路径 A 全部检查项**，可标 N/A 并在 `expectations.md` 的 Step 5 验证记录段注明原因——如"项目尚未接入路径 A，跟踪 issue #XX"——并在 issue tracker 跟踪接入进度。`decisions.md` 只用于本次 audit ⚠️ 项的处置，不混入项目级 backlog。）
 - ✅ `docs/audits/<subplan-id>/audit-report.md` 0 个 critical / unresolved 项
 - ✅ §4.2 五维度审核（一致性/风格/正确性/性能/可维护性）通过
 
-#### 4.5.7 与 §4.2 的关系
+> 后续若发现契约 bug 触发回归修复，按 §5 流程走，并按 §5.1 第五部分"文档更新清单"同步 `expectations.md`。
 
-§4.2 五维度审核**仍然保留**，作为人工 sanity 兜底。但它不再是唯一审核手段——v2 流程的核心是**自动检查 + 独立审核**，§4.2 只填补"机械化和独立审核都覆盖不到的语义直觉"。
+#### 4.5.7 v1 / v2 分工
+
+**v2 不取代 v1**——v1（§4.2 五维度审核）仍作为人工 sanity 兜底**保留**。v2 在其之上叠加两层结构化防线：
+- 路径 A（§4.5.5）：机械化自动检查
+- 路径 B（§4.5.5）：subagent 独立审，消除主 agent 的 confirmation bias
+
+v2 的核心是**自动检查 + 独立审核**；v1 在其后填补"机械化和独立审核都覆盖不到的语义直觉"。**三者都过**才算子计划退出（详见 §4.5.6）。
 
 #### 4.5.8 工具与模板位置
 
@@ -403,12 +422,13 @@ Step 5 自我审核**必须**走两条独立路径：
    - **接口或架构层面问题**（接口不合理、模块划分缺陷、新增功能）— 先完成根因分析（§5.1），再回到设计阶段（§2）调整设计文档，最后按实现流程执行
 3. **举一反三** — 梳理是否存在其他同类问题，反思问题产生的原因，补充相关测试用例
 4. **回归测试** — 将本次发现 bug 的用例补充为回归用例，重新运行所有已有模块的测试，确保无回归
+5. **文档同步** — 按 §5.1 第五部分"文档更新清单"逐项更新所列文档：契约文档（research / design / spec）、模块 README、若该模块属于带 `expectations.md` 的子计划还需同步 `expectations.md`。**文档未同步不算修复完成**（对应 §1.2 操作禁令"修复完成而不同步契约文档"）
 
 ### 5.1 根因分析与修正方案文档（修复前必做）
 
 对于非显而易见的错误，**禁止**跳过分析直接编码修复。必须先产出**修正方案文档**（`docs/fixes/<模块名>-fix-<简述>.md`），经用户确认后才可编码。
 
-文档包含以下四部分：
+文档包含以下五部分：
 
 #### 第一部分：复现与定位
 
@@ -434,6 +454,27 @@ Step 5 自我审核**必须**走两条独立路径：
 - 参考实现是怎么做的（附代码片段或伪代码）
 - 修改后的预期行为（用第一部分的复现用例走一遍修正后的逻辑）
 
+#### 第五部分：文档更新清单
+
+**时点**：本部分**修复前**填出计划清单（与本文档其它部分一同提交确认），**修复完成后（§5 第 5 步）**回填实际状态。
+
+**填法**：列出本次修复影响的所有文档及更新行动。
+
+| 文档路径 | 要改什么 | 状态（修复后回填） |
+|---------|---------|------------------|
+| `<path>` | `<具体改动>` | `<待改 / 已改 commit hash>` |
+
+**以下情况必填清单（不允许写"无"）**：
+- 修复源于既有契约描述错误或不完整（文档与代码偏离，决策为"改文档对齐代码"或双向调整）
+- 修复改变了已有行为契约 / 不变量 / 错误码 / schema
+- 修复涉及带 `expectations.md` 的子计划（同时更新 expectations.md 的相关行）
+
+**可写"无（仅实现修复）+ 理由"**：仅修内部实现细节，不触及任何对外契约描述（如纯局部 off-by-one、内部缓存优化等）。"无 + 理由"格式示例：
+
+> *无 — 本修复仅改 `<file:line>` 内部循环展开方式，输入输出与对外契约完全等价，无任何 schema / 行为 / 不变量变更。*
+
+本清单与 §5 第 5 步"文档同步"配套使用。
+
 **反模式警示**：
 - **禁止**未对照参考实现就提出算法修正方案（避免基于错误理解的"修复"引入新问题）
 - **禁止**用 workaround 替代根因修复而不加说明（如：加主变量轮换来绕过 LC 匹配 bug，本身有价值，但不能替代修复匹配算法本身）
@@ -447,16 +488,21 @@ Step 5 自我审核**必须**走两条独立路径：
 
 ```
 docs/
+├── product/           # 可选：跨 feature 共享契约 (启用条件见 §6.4.1)
+│   ├── architecture.md
+│   └── <shared-contract>.md
 ├── research/          # 调研报告
-│   └── <功能名>-research.md
+│   └── <feature>-research.md
 ├── design/            # 架构文档与细化文档
-│   └── <功能名>/
+│   └── <feature>/
 │       ├── architecture.md
-│       └── detailed-design.md
+│       ├── detailed-design.md
+│       └── subplans/             # 每次有契约变更的子计划 (§6.4.3)
+│           └── <subplan-id>.md
 ├── fixes/             # 修正方案文档
 │   └── <模块名>-fix-<简述>.md
 ├── test-reports/      # 测试报告与 bug 记录
-│   └── <功能名>-test-report.md
+│   └── <feature>-test-report.md
 ├── audits/            # 契约对照审核 (§4.5 v2)
 │   └── <subplan-id>/
 │       ├── expectations.md   # Step 0 抽出的契约 expectations
@@ -471,6 +517,8 @@ templates/
     └── subagent-prompt-template.md
 ```
 
+> 各目录的填充时机与 feature / 子计划边界判定见 §6.4 文档划分原则。
+
 ### 6.2 文档版本控制
 
 - 设计文档随代码一起纳入 Git 管理
@@ -483,6 +531,109 @@ templates/
 - 每轮迭代结束后检查文档是否仍然准确反映当前实现
 - 废弃的设计决策不删除，标注 `[已废弃]` 并说明替代方案和原因
 
+### 6.4 文档划分原则
+
+回答"在已有项目上增加功能时，文档怎么划分"——决定何时新建文档、何时扩充已有文档、文档以什么粒度组织。
+
+#### 6.4.1 概念栈（一套基础 + 一条可选裁剪）
+
+| 概念 | 定义 | 文档载体 |
+|------|------|---------|
+| **feature** | user-facing 能力或模块边界，长期稳定的命名单元 | `docs/research/<feature>-research.md`、`docs/design/<feature>/architecture.md` |
+| **subplan（子计划）** | feature 内一次有契约变更（新增 / 改动 schema / 枚举 / 流程 / 不变量等）的实施单元 | `docs/design/<feature>/subplans/<subplan-id>.md`、`docs/audits/<subplan-id>/`（§4.5 v2 产出） |
+| *(可选)* **product** | 跨 feature 共享、不归属任何单个 feature 的契约或总体架构 | `docs/product/architecture.md`、`docs/product/<shared-contract>.md` |
+
+**用语规约**：本节及后续章节中，中文 prose 用"子计划"，文件路径与 id 用 `subplan-id`。
+
+**可选裁剪条件（litmus test）**：项目里是否有一类契约**不属于任何单个 feature，但被多个 feature 依赖**？
+- **有** → 启用 `docs/product/`，把这类契约提到 product 层独立维护
+- **没有** → 不启用，feature + 子计划两层足够
+
+典型对照：
+
+| 项目类型 | 跨 feature 契约？ | 是否启用 product 层 |
+|---------|-----------------|--------------------|
+| 单 binary CLI / 单算法库 | 没有 | 否 |
+| 数学库 {分解, 积分, 线代}（各自独立） | 没有 | 否 |
+| 编译器 {parser, optimizer, codegen}（共享 IR） | 有（IR） | 是 |
+| Web 应用 {用户, 计费, 搜索}（共享错误格式 / 认证） | 有（错误格式 / 认证模型） | 是 |
+
+#### 6.4.2 边界判定
+
+**主流程（新需求按此自上而下判定）**：
+
+1. **引入新 user-facing 能力 / 模块边界？** → **新建 feature**
+   - 走完 §2 设计三阶段，产出 `docs/research/<feature>-research.md` + `docs/design/<feature>/architecture.md`
+   - feature 名一旦定下来不应轻易改名（涉及目录重命名）
+2. **否则，引入或修改契约（schema / 枚举 / 流程 / 不变量 / 跨实现一致性等）？** → **在已有 feature 内开新子计划**
+   - 分配 **subplan-id**——**全局唯一**的描述性字符串（`docs/audits/` 是 flat 全局目录，需靠 id 自身保证不撞名），格式 `<feature-short>-<num>-<desc>`：
+     - `<feature-short>`：该 feature 的简短前缀（典型 ≤ 6 字符，可以是 feature 名缩写或自定义短称）。一旦选定，该 feature 后续所有 subplan 都用同一前缀以便 grep
+     - `<num>`：该 feature 内 subplan 递增序号（1, 2, 3, …）
+     - `<desc>`：简短描述（kebab-case）
+     - 例：`polyfac-2-sparse-support`、`auth-1-jwt-rotation`
+   - 创建 `docs/design/<feature>/subplans/<subplan-id>.md`
+   - 进入 §4.5 v2 流程：先产 `docs/audits/<subplan-id>/expectations.md` 再实施
+3. **否则（纯实现细节、性能优化）** → **不开新文档**
+   - 按 §4.1 实施 + §4.2 五维度审核即可，无须 §4.5 v2
+
+**平行规则（任何时候触发）**：
+
+- **出现跨 feature 共享契约**（如错误码格式被两个 feature 同时依赖）→ **启用 product 层**
+  - 把这类契约抽到 `docs/product/<shared-contract>.md`
+  - 涉及的各 feature 在自己的 architecture.md 引用 product 层文档而非彼此引用
+  - 触发条件首次出现时一次性把仓库升级到 §6.4.1 表格右列的形态
+
+**bug fix 不在本判定流程**：bug fix 走 §5 流程，按 §5.1 第五部分判定是否涉及契约。涉及契约的 bug fix 若发现根因是契约本身错误，按 §5 同步修订契约文档；若发现根因是契约不完整（应当存在但缺失的子计划），可能反推到主流程步骤 2 补开子计划再继续。
+
+#### 6.4.3 文档物理结构对应
+
+文档目录结构（详见 §6.1）按以下规则填充：
+
+- `docs/product/`：仅在 6.4.1 litmus test 触发后存在
+- `docs/research/<feature>-research.md`：每个 feature 一份，扩充时 append 新节并标注"由子计划 `<subplan-id>` 引入"
+- `docs/design/<feature>/architecture.md`：feature 主架构，相对稳定；子计划引入的局部变更优先写入 `subplans/<subplan-id>.md`。**满足以下任一条件**才回写主 architecture.md：
+  - 改动 feature 对外公开接口的签名 / 字段 / 错误码
+  - 改动 feature 的模块划分（新增 / 合并 / 删除模块）
+  - 引入跨子计划共享的数据结构 / 不变量
+- `docs/design/<feature>/subplans/<subplan-id>.md`：子计划内的设计变更
+- `docs/audits/<subplan-id>/`：§4.5 v2 产出（expectations / audit-report / decisions），与 `docs/design/<feature>/subplans/<subplan-id>.md` 一一对应
+- `docs/fixes/<模块名>-fix-<简述>.md`：§5.1 修正方案，每次非显而易见的 bug fix 一份
+
+#### 6.4.4 示例
+
+**示例 1：feature 内开新子计划（最常见）**
+
+数学库已有 feature `polynomial-factorization`（只支持稠密多项式）。现在要加稀疏多项式支持——引入新的 schema 字段 `representation: "dense" | "sparse"` 和新流程步骤。
+
+判定：步骤 2 命中（引入新契约 / 改动现有契约）→ 开新子计划，分配 subplan-id `polyfac-2-sparse-support`（feature 短称 `polyfac`，feature 内第 2 个 subplan，描述 `sparse-support`）：
+```
+docs/design/polynomial-factorization/
+  architecture.md                                        ← 主架构 append 一节"稀疏扩展概述 (子计划 polyfac-2)"
+  subplans/polyfac-2-sparse-support.md                   ← 子计划详细设计变更
+docs/audits/polyfac-2-sparse-support/
+  expectations.md
+  audit-report.md
+  decisions.md
+docs/research/polynomial-factorization-research.md       ← append 调研稀疏多项式算法的章节，标 "由子计划 polyfac-2 引入"
+```
+
+**示例 2：触发 product 层启用**
+
+Web 应用最初只有 feature `user-management`，所有错误格式直接在它的 architecture.md 里定义。现在新增 feature `billing`，发现也需要同一套错误格式。
+
+判定：出现跨 feature 共享契约 → 启用 product 层：
+```
+docs/product/
+  error-format.md                                    ← 把错误格式从 user-management 抽出
+  authentication.md                                  ← 同理，认证模型也抽出
+docs/design/user-management/architecture.md          ← 原错误格式定义改为指向 docs/product/error-format.md 的引用
+docs/design/billing/architecture.md                  ← 引用同一份 docs/product/error-format.md
+```
+
+迁移顺序（避免临时不一致）：(a) 先在 product 层写新文档，(b) 双向核对 product 文档与原 architecture.md 等价，(c) 修改 user-management 内引用并验证，(d) 删除原 architecture.md 中的旧定义。
+
+此后若再加 feature `search` 等，错误格式契约已有归属，不会重复或漂移。
+
 ---
 
 ## 7. 流程速查
@@ -493,7 +644,7 @@ templates/
 
 新增子计划（带契约文档）—— §4.5 v2 强制流程：
   Step 0 (规划)
-    抽契约 expectations (10 节, docs/audits/<id>/expectations.md)
+    抽契约 expectations (10 节, docs/audits/<subplan-id>/expectations.md)
     识别机械化部分 (JSON Schema / 共享 enum / # Step Pn 注释)
     列 property-based invariants
   Step 1-3 (实施)
@@ -501,16 +652,16 @@ templates/
     加 # Step Pn 注释
     property-based 测试覆盖 invariants
   Step 5 (双验证)
-    A. <项目自备> contract_audit run_all <id>   ← 自动机械化检查
+    A. <项目自备> contract_audit run_all <subplan-id>   ← 自动机械化检查
     B. subagent 独立审 (按 templates/contract-audit/subagent-prompt-template.md)
-    主 agent 修 ❌ + 决策 ⚠️ → docs/audits/<id>/decisions.md
+    主 agent 修 ❌ + 决策 ⚠️ → docs/audits/<subplan-id>/decisions.md
 
 Bug 修复：
   发现错误     → 定位错误 → 构建根因分析文档 (§5.1) → [确认] → fix 分类
-  局部错误     → 直接修复 + 补测试 + 回归
-  算法内部错误 → 修正方案文档(§5.1) → [确认] → 修复 + 补测试 + 回归
+  局部错误     → 直接修复 + 补测试 + 回归 + 文档同步(§5 第 5 步)
+  算法内部错误 → 修正方案文档(§5.1) → [确认] → 修复 + 补测试 + 回归 + 文档同步
                  ↑ 算法类 bug 必须对照参考实现
-  接口/架构问题 → 修正方案文档(§5.1) → [确认] → 更新设计(§2) → 按实现流程执行 + 回归
+  接口/架构问题 → 修正方案文档(§5.1) → [确认] → 更新设计(§2) → 按实现流程执行 + 回归 + 文档同步
 
 Claude 每步操作：
   说明计划 → [等待确认] → 执行单步 → 报告结果 → [等待反馈]
