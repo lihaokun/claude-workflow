@@ -11,6 +11,7 @@
 1. 主 agent 完成 Step 1-3 实施 + Step 5 路径 A（自动检查）后启动
 2. 复制下方 "## Prompt" 段落的全部内容，填入 `{{占位符}}`
 3. 用 Agent tool 启动 `general-purpose` subagent，将 prompt 传给它
+   - **若你的 agent 环境没有 `general-purpose` 类型**，替换为等效的"独立审核 / 通用研究"类型（关键是该 subagent 不继承主 agent 的对话上下文）
 4. subagent 产出 `docs/audits/{{SUBPLAN_ID}}/audit-report.md` 后返回
 5. 主 agent review 报告，修 ❌ + 决策 ⚠️ → 记录到 `decisions.md`
 
@@ -53,6 +54,7 @@
 - 测试代码（除非 diff 里出现）
 - 主 agent 的 commit message
 - 任何在 docs/audits/{{SUBPLAN_ID}}/decisions.md 的旧决策（你做独立判断，不被旧决策影响）
+- 任何旧的 docs/audits/{{SUBPLAN_ID}}/audit-report.md（若本次是迭代审核，独立做新判断，不被前次结论影响）
 
 如果中途发现不看完整代码无法判断某项, 在 audit-report.md 中标注 "⚠️ 需主 agent 补充上下文" 并继续, 不要主动去读。
 
