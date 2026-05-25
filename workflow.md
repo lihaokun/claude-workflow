@@ -133,7 +133,12 @@ goal → 模块映射：
 
 > **6 条与 §3.1 功能规约的关系**：§3.1 规约写 "**是什么**"（pre / post / invariant），§2.3.1 完整性是写细化时 "**怎么演绎**" 的格式要求。两者互补，不替代。
 
-> **算法 / 形式化验证类项目特化**：可在 6 条基础上引入 Hoare-logic SP reasoning、循环不变量三性质（ESTABLISHMENT / PRESERVATION / INTERIOR）等形式化层。本节 6 条对应 proof-drafter SP Reasoning 7 项中可通用化的部分（SP #1 推导连续 / #2 分支 / #3 退出 / #4 callee 引用 / #5 循环 / #7 carry-forward）；SP #6（goto state 传播）罕见于非验证场景，留在 verification domain 不进通用版。形式化示例参见 proof-drafter `docs/design/architecture.md §3.2.3`。
+> **算法 / 形式化验证类项目特化**：可在 6 条基础上引入 Hoare-logic SP (Strongest Postcondition) Reasoning，要求**逐 AST 语句**记录 state 变换（无跳步）、循环不变量给出三性质的显式陈述、carry-forward 用 verbatim 列法（每步显式列出沿用事实，不写 "trivially carried"）。三性质：
+> - **ESTABLISHMENT**：loop head 对所有可达入口 state 成立
+> - **PRESERVATION**：`inv ∧ cond` ⇒ 执行一遍 body 后 inv 仍成立
+> - **INTERIOR**：`inv ∧ cond` 强到能证 body 内的 assert 与 callee.requires
+>
+> 本节 6 条已覆盖形式化义务中通用部分（推导连续 / 分支 / 退出 / callee 引用 / 循环 / 显式假设链），形式化版主要是补强精度与刚性。goto 状态传播这类罕见于非验证场景的项不纳入通用版。
 
 #### 2.3.2 函数正确性论证
 
@@ -199,7 +204,18 @@ goal → 模块映射：
   - 副作用论证: (1) table 行变更：只有 succeeded 中的行最终落盘（步骤 3 savepoint + 步骤 4 commit 联合保证）；(2) log.write 调用：每个失败行触发一次，由 H2 隔离不影响主流程；(3) 无其它共享状态写入
 ```
 
-> proof-drafter cross-link：算法 / 形式化验证类项目可在本节"论证段"基础上引入 Hoare-logic SP Reasoning（逐 AST 语句 state 变换 + carry-forward verbatim 列法）。参见 `proof-drafter docs/design/architecture.md §3.2.3 (i) §2`。
+> **形式化扩展（算法 / 验证类项目）**：本节"论证段"格式可向形式化方向加强——例如 Hoare-logic SP Reasoning 要求逐 AST 语句记录 state 变换，并用 carry-forward verbatim 列法显式列出每步保留的事实。形式如：
+>
+> ```
+> s5: ptr = malloc(n)
+>     carried: n ≥ 0 ∧ valid(buf, len)
+> s6: if (ptr == NULL) goto err;
+>     carried: n ≥ 0 ∧ valid(buf, len)
+>     branch_T: ptr == NULL → goto err
+>     branch_F: ptr ≠ NULL ∧ valid(ptr, n)
+> ```
+>
+> 这种格式让 reviewer / 工具能机械对照每步是否丢失事实——非形式化项目无须此严格度，本节模板已够用。
 
 > **渐进引入策略（首次接入项目）**：本节对 non-trivial 的判定较宽，全量执行成本不低。**首次接入** workflow 的存量项目可分阶段：(1) 新增子计划的所有 non-trivial 函数硬性执行；(2) 存量函数仅 critical path（涉及数据正确性 / 安全 / 资金的路径）回填；(3) 其它存量函数随接触随补。**新建项目**从头执行，无须降级。
 
