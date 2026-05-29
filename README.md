@@ -1,6 +1,6 @@
-# claude-workflow
+# semiformal-sdd-workflow
 
-面向 coding agent 与开发者共同遵守的开发工作流程规范模板。
+**面向 coding agent + 人类开发者的半形式化 SDD 工程协议**。设计先于代码、契约对照审核、修复同等严谨——适用于算法 / 验证 / 长期可维护性项目。
 
 **`workflow.md` 本身 agent-agnostic**——抽象流程规范，可用于任何 AI coding agent（Claude / GPT / Gemini 等）。本仓库提供的部署配套文件（`CLAUDE-template.md` / `global-CLAUDE.md` / `new-project.md`）以 **Claude Code** 为参考实现，其它 agent 用户可类比适配。
 
@@ -23,7 +23,7 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/lihaokun/claude-workflow.git
+git clone https://github.com/lihaokun/semiformal-sdd-workflow.git
 ```
 
 ### 2. 部署模板文件
@@ -33,11 +33,11 @@ git clone https://github.com/lihaokun/claude-workflow.git
 mkdir -p ~/templates
 
 # 复制核心模板
-cp claude-workflow/CLAUDE-template.md ~/templates/
-cp claude-workflow/workflow.md ~/templates/
+cp semiformal-sdd-workflow/CLAUDE-template.md ~/templates/
+cp semiformal-sdd-workflow/workflow.md ~/templates/
 
 # 复制契约对照审核 v2 模板（搭配 workflow.md §6 使用，按需启用）
-cp -r claude-workflow/templates/contract-audit ~/templates/
+cp -r semiformal-sdd-workflow/templates/contract-audit ~/templates/
 ```
 
 ### 3. 部署 Claude Code 配置
@@ -45,11 +45,11 @@ cp -r claude-workflow/templates/contract-audit ~/templates/
 ```bash
 # 全局规则（追加到已有内容后）
 mkdir -p ~/.claude
-cat claude-workflow/global-CLAUDE.md >> ~/.claude/CLAUDE.md
+cat semiformal-sdd-workflow/global-CLAUDE.md >> ~/.claude/CLAUDE.md
 
 # 自定义命令
 mkdir -p ~/.claude/commands
-cp claude-workflow/new-project.md ~/.claude/commands/new-project.md
+cp semiformal-sdd-workflow/new-project.md ~/.claude/commands/new-project.md
 ```
 
 ### 4. 使用
@@ -92,7 +92,7 @@ Coding agent 每步操作：
 - **workflow.md**：如果项目不涉及跨进程/跨机器通信，可整段跳过附录 A 分布式接口契约扩展。如果项目不涉及并发，可忽略 §3.4 并发规约。如果不是算法类项目，§7.1 的参考实现对照可简化
 - **CLAUDE-template.md**：技术栈、常用命令、代码风格、参考实现、已知限制等节均为渐进填充，项目初期留空不影响使用
 - **global-CLAUDE.md**：如果你已有全局 CLAUDE.md，将内容合并而非覆盖
-- **templates/contract-audit/**：仅在引入 §4.5 v2 流程时需要部署到项目根（项目 `templates/contract-audit/`）。bug fix / refactor / 小项目可不部署。详见 `templates/contract-audit/README.md` 中的"何时建议你也用 v2"段
+- **templates/contract-audit/**：仅在引入 §6 v2 流程时需要部署到项目根（项目 `templates/contract-audit/`）。bug fix / refactor / 小项目可不部署。详见 `templates/contract-audit/README.md` 中的"何时建议你也用 v2"段
 
 ## 致谢
 
