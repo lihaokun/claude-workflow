@@ -14,7 +14,7 @@
 | `CLAUDE-template.md` | 项目级 CLAUDE.md 模板 | 复制为项目根目录 `CLAUDE.md` |
 | `global-CLAUDE.md` | 全局规则：新项目时提醒初始化 | 合并到 `~/.claude/CLAUDE.md` |
 | `new-project.md` | 自定义命令：一键初始化项目规范 | `~/.claude/commands/new-project.md` |
-| `templates/contract-audit/` | 契约对照审核 v2 模板（搭配 `workflow.md §4.5` 使用） | 项目 `templates/contract-audit/` |
+| `templates/contract-audit/` | 契约对照审核 v2 模板（搭配 `workflow.md §6` 使用） | 项目 `templates/contract-audit/` |
 
 ## 快速开始
 
@@ -34,7 +34,7 @@ mkdir -p ~/templates
 cp claude-workflow/CLAUDE-template.md ~/templates/
 cp claude-workflow/workflow.md ~/templates/
 
-# 复制契约对照审核 v2 模板（搭配 workflow.md §4.5 使用，按需启用）
+# 复制契约对照审核 v2 模板（搭配 workflow.md §6 使用，按需启用）
 cp -r claude-workflow/templates/contract-audit ~/templates/
 ```
 
@@ -66,12 +66,12 @@ cp claude-workflow/new-project.md ~/.claude/commands/new-project.md
 新功能开发：
   调研 → [确认] → 架构 → [确认] → 细化 → [确认] → 审查 → 逐模块实现+测试+审核
 
-新增子计划（带契约文档）—— §4.5 v2 强制流程（硬约束仅 AI agent）：
+新增子计划（带契约文档）—— §6 v2 强制流程（硬约束仅 AI agent）：
   Step 0   抽契约 expectations + 识别机械化部分 + 列 property-based invariants
   Step 1-3 引用共享常量 + 加 # Step Pn 注释 + property-based 测试覆盖
   Step 5   路径 A 自动检查（项目自备） + 路径 B subagent 独立审 → 决策 ⚠️ 项
 
-Bug 修复（§5.1 修正方案文档 8 部分 + §5 主流程 6 步：测试同步 + 代码同步 + 文档同步）：
+Bug 修复（§7.1 修正方案文档 8 部分 + §7 主流程 6 步：测试同步 + 代码同步 + 文档同步）：
   局部错误     → 直接修复 + 测试同步 + 代码同步 + 文档同步
   算法内部错误 → 修正方案文档 → [确认] → 修复 + 测试同步 + 代码同步 + 文档同步
   接口/架构问题 → 修正方案文档 → [确认] → 更新设计 → 按实现流程执行
@@ -87,7 +87,7 @@ Claude 每步操作：
 
 这套模板是通用基础，建议根据项目特点定制：
 
-- **workflow.md**：如果项目不涉及跨进程/跨机器通信，可整段跳过附录 A 分布式接口契约扩展。如果项目不涉及并发，可忽略 §3.4 并发规约。如果不是算法类项目，§5.1 的参考实现对照可简化
+- **workflow.md**：如果项目不涉及跨进程/跨机器通信，可整段跳过附录 A 分布式接口契约扩展。如果项目不涉及并发，可忽略 §3.4 并发规约。如果不是算法类项目，§7.1 的参考实现对照可简化
 - **CLAUDE-template.md**：技术栈、常用命令、代码风格、参考实现、已知限制等节均为渐进填充，项目初期留空不影响使用
 - **global-CLAUDE.md**：如果你已有全局 CLAUDE.md，将内容合并而非覆盖
 - **templates/contract-audit/**：仅在引入 §4.5 v2 流程时需要部署到项目根（项目 `templates/contract-audit/`）。bug fix / refactor / 小项目可不部署。详见 `templates/contract-audit/README.md` 中的"何时建议你也用 v2"段
