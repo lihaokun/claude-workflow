@@ -1,6 +1,6 @@
 <!--
   Step 0 必产出: docs/audits/<subplan-id>/expectations.md
-  规范: workflow.md §4.5
+  规范: workflow.md §6
   使用方法: 复制本文件到 docs/audits/<subplan-id>/expectations.md, 然后逐节填写。
 
   填写顺序: §1 → §2 → §3 → ... → §10。
@@ -153,7 +153,7 @@
 - [ ] 0 个 critical / unresolved 项
 - [ ] ⚠️ 项处置已记录到 `docs/audits/<subplan-id>/decisions.md`
 
-### §4.2 五维度兜底
+### §5.2 五维度兜底
 - [ ] 一致性
 - [ ] 风格
 - [ ] 正确性
@@ -164,5 +164,5 @@
 
 *本 expectations 由 Step 0 **从契约文档独立抽取**（禁止从代码回填）。任何后续修改必须先改契约文档，再同步本表。两种触发场景：*
 
-- ***bug 类契约修复** → 走 `workflow.md §5` 流程，按 §5.1 第五部分"文档更新清单"把本表加入清单同步*
-- ***feature 类契约扩展** → 按 `workflow.md §6.4` 文档划分原则判定是续做本子计划还是开新子计划*
+- ***bug 类契约修复** → 走 `workflow.md §7` 流程，按 §7.1 第八部分"文档更新清单"把本表加入清单同步*
+- ***feature 类契约扩展** → 按 `workflow.md §2.3 边界判定`判定是续做本子计划还是开新子计划*
