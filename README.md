@@ -1,8 +1,10 @@
 # claude-workflow
 
-面向 Claude Code 的通用开发工作流程规范模板。
+面向 coding agent 与开发者共同遵守的开发工作流程规范模板。
 
-包含：设计三阶段流程、半形式化规约书写规范、分层测试策略、根因分析驱动的 bug 修复流程、契约对照审核（消除自审 bias 的结构化双验证），以及 Claude 行为准则。
+**`workflow.md` 本身 agent-agnostic**——抽象流程规范，可用于任何 AI coding agent（Claude / GPT / Gemini 等）。本仓库提供的部署配套文件（`CLAUDE-template.md` / `global-CLAUDE.md` / `new-project.md`）以 **Claude Code** 为参考实现，其它 agent 用户可类比适配。
+
+包含：设计三阶段流程、半形式化规约书写规范、分层测试策略、根因分析驱动的 bug 修复流程、契约对照审核（消除自审 bias 的结构化双验证），以及 coding agent 行为准则。
 
 适用于算法密集型项目（如数学库、编译器、形式化验证工具等），也可作为通用项目的开发规范基础。
 
@@ -66,7 +68,7 @@ cp claude-workflow/new-project.md ~/.claude/commands/new-project.md
 新功能开发：
   调研 → [确认] → 架构 → [确认] → 细化 → [确认] → 审查 → 逐模块实现+测试+审核
 
-新增子计划（带契约文档）—— §6 v2 强制流程（硬约束仅 AI agent）：
+新增子计划（带契约文档）—— §6 v2 强制流程（硬约束仅 coding agent）：
   Step 0   抽契约 expectations + 识别机械化部分 + 列 property-based invariants
   Step 1-3 引用共享常量 + 加 # Step Pn 注释 + property-based 测试覆盖
   Step 5   路径 A 自动检查（项目自备） + 路径 B subagent 独立审 → 决策 ⚠️ 项
@@ -77,7 +79,7 @@ Bug 修复（§7.1 修正方案文档 8 部分 + §7 主流程 6 步：测试同
   接口/架构问题 → 修正方案文档 → [确认] → 更新设计 → 按实现流程执行
                                   + 测试同步 + 代码同步 + 文档同步
 
-Claude 每步操作：
+Coding agent 每步操作：
   说明计划 → [等待确认] → 执行单步 → 报告结果 → [等待反馈]
 ```
 

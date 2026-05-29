@@ -148,7 +148,7 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 
 **Q6: 我是协作者（不是主开发者），需要遵守 v2 流程吗？**
 
-不强制。v2 硬约束**仅针对 AI coding agent**，权威定义见 `workflow.md §6.1 约束对象声明`。
+不强制。v2 硬约束**仅针对 coding agent**，权威定义见 `workflow.md §6.1 约束对象声明`。
 
 简短版：
 - 你看到 `docs/audits/<subplan-id>/` 目录 = v2 审核产物，与日常开发无关
@@ -182,4 +182,4 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 - 流程定义: `workflow.md §6`
 - 模板使用方: 各子计划 `docs/audits/<id>/expectations.md`
 - 自动工具: `scripts/contract_audit/`（由项目自备）
-- AI agent 约束: `CLAUDE.md` / `AGENTS.md`
+- coding agent 约束: `CLAUDE.md` / `AGENTS.md`

@@ -1,11 +1,11 @@
 # 通用开发工作流程规范
 
-> 本文档是面向 Claude 与开发者共同遵守的项目开发流程规范模板。
+> 本文档是面向 coding agent 与开发者共同遵守的项目开发流程规范模板。
 > 在具体项目中，通过 CLAUDE.md 引用本文档：`@docs/workflow.md`
 
 ---
 
-## 1. Claude 行为准则
+## 1. Coding agent 行为准则
 
 ### 1.1 核心原则
 
@@ -633,7 +633,7 @@ goal → 模块映射：
 - `src/<module>/<DATA_FORMAT_SPEC>.md`
 - `src/<module>/README.md`
 
-**约束对象声明**: 本节"硬约束"**仅 AI coding agent 必须遵守**。人类开发者**可选**用 v2 流程，但不强制；本流程**不阻断**人工 commit / push（无 CI hook）。协作者看到 `docs/audits/<subplan-id>/` 目录是 v2 审核产物，不影响日常开发。详见 `templates/contract-audit/README.md` Q6。
+**约束对象声明**: 本节"硬约束"**仅 coding agent 必须遵守**。人类开发者**可选**用 v2 流程，但不强制；本流程**不阻断**人工 commit / push（无 CI hook）。协作者看到 `docs/audits/<subplan-id>/` 目录是 v2 审核产物，不影响日常开发。详见 `templates/contract-audit/README.md` Q6。
 
 ### 6.2 Step 0 规划阶段（必产出）
 
@@ -935,7 +935,7 @@ Bug 修复（§7 主流程 6 步，§7.1 修正方案文档 8 部分）：
   接口/架构问题 → 修正方案文档 → [确认] → 更新设计(§4) → 按实现流程执行
                                   + 测试同步 + 代码同步 + 文档同步
 
-Claude 每步操作：
+Coding agent 每步操作：
   说明计划 → [等待确认] → 执行单步 → 报告结果 → [等待反馈]
 ```
 
