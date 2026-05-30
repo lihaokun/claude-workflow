@@ -1,5 +1,5 @@
 <!--
-  workflow.md §4.5 路径 B: Subagent 独立审 prompt 模板
+  workflow.md §6 路径 B: Subagent 独立审 prompt 模板
   使用方法: 主 agent 复制下方 prompt 填入 {{占位符}}, 用 Agent tool (subagent_type: general-purpose) 启动
   目的: 消除主 agent 自审的 confirmation bias
 -->

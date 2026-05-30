@@ -4,7 +4,7 @@
 2. 创建 docs/ 目录（如不存在）
 3. 从 ~/templates/workflow.md 复制到 docs/workflow.md
 4. 询问用户：本项目是否预计有"新增子计划（带契约文档）"的工作？
-   - 如是：从 ~/templates/contract-audit/ 复制到项目根 templates/contract-audit/（启用 workflow.md §4.5 v2 流程）
+   - 如是：从 ~/templates/contract-audit/ 复制到项目根 templates/contract-audit/（启用 workflow.md §6 v2 流程）
    - 如否或不确定：跳过本步，后续如需启用，再手动复制
 5. 提示用户填写 CLAUDE.md 中的以下占位信息：
    - 项目名称

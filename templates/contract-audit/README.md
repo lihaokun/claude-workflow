@@ -1,10 +1,10 @@
 # Contract Audit Templates
 
-> **流程规范**: `workflow.md §4.5 契约对照审核 v2`
+> **流程规范**: `workflow.md §6 契约对照审核 v2`
 
 ## 这是什么
 
-新增子计划（带契约文档的实施任务）的强制审核流程模板。**取代**单纯依赖 §4.2 五维度自审核的旧做法。
+新增子计划（带契约文档的实施任务）的强制审核流程模板。**取代**单纯依赖 §5.2 五维度自审核的旧做法。
 
 ## 为什么需要
 
@@ -28,7 +28,7 @@ templates/contract-audit/
 
 **配套——项目自备**（每个下游项目自行实现，不在本仓库提供）：
 ```
-scripts/contract_audit/                # 自动检查工具（机械化部分，workflow.md §4.5.5 列出应覆盖的检查项；脚本名 / 入口 / 语言项目自选）
+scripts/contract_audit/                # 自动检查工具（机械化部分，workflow.md §6.5 列出应覆盖的检查项；脚本名 / 入口 / 语言项目自选）
 ```
 
 **配套——运行时产出**（流程执行过程中自动生成，每子计划一份）：
@@ -73,7 +73,7 @@ cp templates/contract-audit/expectations-template.md docs/audits/<subplan-id>/ex
 python scripts/contract_audit/run_all.py <subplan-id>
 ```
 
-应覆盖（workflow.md §4.5.5 路径 A）：
+应覆盖（workflow.md §6.5 路径 A）：
 - JSON Schema 验证 JSON 输出
 - `# Step Pn:` 注释 grep（验证 P1-Pn 全在）
 - 共享枚举 import 检查（无重复定义）
@@ -122,7 +122,7 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 - [ ] `expectations.md` §1-§10 全部填完
 - [ ] 路径 A 自动检查全过
 - [ ] `audit-report.md` 0 个 critical / 全部 ⚠️ 都已 decisions.md 处置
-- [ ] §4.2 五维度审核通过（兜底）
+- [ ] §5.2 五维度审核通过（兜底）
 
 ## FAQ
 
@@ -136,11 +136,11 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 
 **Q3: 这套流程会不会太重？**
 
-只用于**新增子计划（带契约文档）**。bug fix / 小修补可仅用 §4.2。`expectations.md` 通常 200-500 行，subagent audit 是一次性 cost。相比漏检后的修复成本（fix commit + 文档同步 + 解释），v2 流程的开销更低。
+只用于**新增子计划（带契约文档）**。bug fix / 小修补可仅用 §5.2。`expectations.md` 通常 200-500 行，subagent audit 是一次性 cost。相比漏检后的修复成本（fix commit + 文档同步 + 解释），v2 流程的开销更低。
 
-**Q4: 主 agent 已经有 §4.2 自审核，subagent 独立审是不是冗余？**
+**Q4: 主 agent 已经有 §5.2 自审核，subagent 独立审是不是冗余？**
 
-不是。§4.2 是**人审兜底**（5 维度直觉判断），subagent 独立审是**结构化对照**（10 节 checklist 逐条 grep）。两者互补：subagent 负责"严谨"，§4.2 负责"灵活"。
+不是。§5.2 是**人审兜底**（5 维度直觉判断），subagent 独立审是**结构化对照**（10 节 checklist 逐条 grep）。两者互补：subagent 负责"严谨"，§5.2 负责"灵活"。
 
 **Q5: Step 0 expectations 与设计文档里的规约重复吗？**
 
@@ -148,12 +148,12 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 
 **Q6: 我是协作者（不是主开发者），需要遵守 v2 流程吗？**
 
-不强制。v2 硬约束**仅针对 AI coding agent**，权威定义见 `workflow.md §4.5.1 约束对象声明`。
+不强制。v2 硬约束**仅针对 coding agent**，权威定义见 `workflow.md §6.1 约束对象声明`。
 
 简短版：
 - 你看到 `docs/audits/<subplan-id>/` 目录 = v2 审核产物，与日常开发无关
 - 你的 PR 不需要填 expectations.md，除非你**也在做新增子计划**
-- bug fix / refactor / 文档 / 测试 / 基建 = 仍按 §4.2 五维度自审核
+- bug fix / refactor / 文档 / 测试 / 基建 = 仍按 §5.2 五维度自审核
 
 **何时建议你也用 v2**:
 - 大型新功能（涉及跨多文件 + 引入新 schema / 枚举 / 流程契约）
@@ -167,8 +167,8 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 
 **Q7: 怎么把这套流程引入到我的项目？**
 
-1. 复制 `templates/contract-audit/`、`workflow.md §4.5` 到目标项目
-2. 在 `scripts/contract_audit/` 下实现 §4.5.5 路径 A 列出的检查项（项目自备，可用 Python / Shell / 任意语言）
+1. 复制 `templates/contract-audit/`、`workflow.md §6` 到目标项目
+2. 在 `scripts/contract_audit/` 下实现 §6.5 路径 A 列出的检查项（项目自备，可用 Python / Shell / 任意语言）
 3. 在目标项目根创建 `docs/audits/` 目录
 4. 修改 `CLAUDE.md` / `AGENTS.md` 引入"契约对照审核 v2"段（保持硬约束语义）
 
@@ -179,7 +179,7 @@ echo "# Decisions — <subplan-id>" > docs/audits/<subplan-id>/decisions.md
 
 ## 引用关系
 
-- 流程定义: `workflow.md §4.5`
+- 流程定义: `workflow.md §6`
 - 模板使用方: 各子计划 `docs/audits/<id>/expectations.md`
 - 自动工具: `scripts/contract_audit/`（由项目自备）
-- AI agent 约束: `CLAUDE.md` / `AGENTS.md`
+- coding agent 约束: `CLAUDE.md` / `AGENTS.md`
