@@ -1,6 +1,6 @@
 <!--
   workflow.md §6 路径 B: Subagent 独立审 prompt 模板
-  使用方法: 主 agent 复制下方 prompt 填入 {{占位符}}, 用 Agent tool (subagent_type: general-purpose) 启动
+  使用方法: 主 agent 复制下方 prompt 填入 {{占位符}}, 用当前 coding agent 的独立 subagent 机制启动
   目的: 消除主 agent 自审的 confirmation bias
 -->
 
@@ -10,8 +10,9 @@
 
 1. 主 agent 完成 Step 1-3 实施 + Step 5 路径 A（自动检查）后启动
 2. 复制下方 "## Prompt" 段落的全部内容，填入 `{{占位符}}`
-3. 用 Agent tool 启动 `general-purpose` subagent，将 prompt 传给它
-   - **若你的 agent 环境没有 `general-purpose` 类型**，替换为等效的"独立审核 / 通用研究"类型（关键是该 subagent 不继承主 agent 的对话上下文）
+3. 用当前 coding agent 的 subagent 机制启动独立通用审核者，将 prompt 传给它
+   - 选择等效的“独立审核 / 通用研究”类型
+   - 只传入填好的 prompt 与必要路径，不传实现讨论或主 agent 的既有判断
 4. subagent 产出 `docs/audits/{{SUBPLAN_ID}}/audit-report.md` 后返回
 5. 主 agent review 报告，修 ❌ + 决策 ⚠️ → 记录到 `decisions.md`
 
@@ -179,10 +180,10 @@ audit-report.md ~200-500 行。**不要**逐行解读 diff (那是代码 review 
 {{EXPECTATIONS_PATH}} = docs/audits/<A-X>/expectations.md
 ```
 
-主 agent 启动语 (Agent tool):
+主 agent 启动要求：
 
 ```
-description: <A-X> 独立契约审核
-subagent_type: general-purpose
-prompt: <填入填好占位符的 Prompt>
+任务描述: <A-X> 独立契约审核
+角色: 独立通用审核者
+上下文: 仅传入填好占位符的 Prompt
 ```

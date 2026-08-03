@@ -8,7 +8,7 @@
 src/           — 核心源码
 tests/         — 测试代码
 docs/          — 设计文档与流程规范
-  workflow.md  — 开发工作流程规范（@docs/workflow.md）
+  workflow.md  — 开发工作流程规范
 ```
 
 ## 技术栈
@@ -63,7 +63,7 @@ docs/          — 设计文档与流程规范
 
 ## 工作流程
 
-遵循 @docs/workflow.md 中定义的开发流程规范。
+开始项目任务前，读取并遵循 `docs/workflow.md` 中定义的开发流程规范。
 
 ### 流程速查
 

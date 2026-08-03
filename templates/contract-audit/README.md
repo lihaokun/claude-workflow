@@ -85,7 +85,7 @@ python scripts/contract_audit/run_all.py <subplan-id>
 按 `subagent-prompt-template.md` 启动 subagent：
 
 1. 主 agent 填占位符（`{{SUBPLAN_ID}}` / `{{CONTRACT_DOCS}}` / `{{COMMIT_RANGE}}` 等）
-2. 用 Agent tool（subagent_type=`general-purpose`）启动
+2. 用当前 coding agent 的 subagent 机制启动独立通用审核者；只传入填好的审核 prompt 与必要路径，不传实现讨论或主 agent 的既有判断
 3. subagent 看契约 + diff（**不看完整代码 + 不看 expectations 的"实现位置"列**）
 4. subagent 独立列 expectations + 与主 agent 对比 + 产出 `audit-report.md`
 
